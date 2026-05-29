@@ -20,13 +20,19 @@ app.get('/api/hello', (req: Request, res: Response) => {
   res.json({ message: 'Hello world!' });
 });
 
+// conversation ID -> last response ID
+const conversations = new Map<string, string>();
+
 app.post('/api/chat', async (req: Request, res: Response) => {
-  const {prompt} = req.body;
+  const {prompt, conversationId} = req.body;
 
   const response = await client.responses.create({
     model: "gpt-5.4-mini",
     input: prompt,
+    previous_response_id: conversations.get(conversationId)
   })
+
+  conversations.set(conversationId, response.id)
 
   res.json({message: response.output_text})
 })
