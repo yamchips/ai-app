@@ -2,7 +2,7 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
-import z from 'zod'
+import z from 'zod';
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ const chatSchema = z.object({
   .min(1, 'Prompt is required')
   .max(1000, 'Prompt is too long (max 1000 characters)'),
   conversationId: z.uuid()
-})
+});
 
 app.post('/api/chat', async (req: Request, res: Response) => {
   const parseResult = chatSchema.safeParse(req.body)
@@ -39,17 +39,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     return
   }
   
-  const {prompt, conversationId} = req.body;
+  try {
+    const {prompt, conversationId} = req.body;
+  
+    const response = await client.responses.create({
+      model: "gpt-5.4-mini!",
+      input: prompt,
+      previous_response_id: conversations.get(conversationId)
+    });
+  
+    conversations.set(conversationId, response.id)
+  
+    res.json({message: response.output_text})
+  } catch (error) {
+    res.status(500).json({ error: "Failed to generate a response."})
+  }
 
-  const response = await client.responses.create({
-    model: "gpt-5.4-mini",
-    input: prompt,
-    previous_response_id: conversations.get(conversationId)
-  })
-
-  conversations.set(conversationId, response.id)
-
-  res.json({message: response.output_text})
 })
 
 app.listen(port, () => {
