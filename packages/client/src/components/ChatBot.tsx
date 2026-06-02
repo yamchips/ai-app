@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Button } from './ui/button';
 import { FaArrowUp } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
@@ -23,6 +23,11 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const { register, handleSubmit, reset, formState } = useForm<FormData>();
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const onSubmit = async ({ prompt }: FormData) => {
     setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
@@ -71,6 +76,7 @@ const ChatBot = () => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         onKeyDown={onKeyDown}
+        ref={formRef}
         className="flex flex-col px-3 py-3 gap-2 items-end border-2 div-4 rounded-3xl"
       >
         <textarea
