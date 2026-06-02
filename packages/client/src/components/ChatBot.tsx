@@ -30,6 +30,7 @@ const ChatBot = () => {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const { register, handleSubmit, reset, formState } = useForm<FormData>();
   const lastMessageRef = useRef<HTMLDivElement | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,17 +45,26 @@ const ChatBot = () => {
   };
 
   const onSubmit = async ({ prompt }: FormData) => {
-    setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
-    setIsBotTyping(true);
-    reset({ prompt: '' });
-    const response = await axios.post<ChatResponse>('/api/chat', {
-      prompt,
-      conversationId: conversationId.current,
-    });
-    const { data } = response;
-    // console.log(response);
-    setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
-    setIsBotTyping(false);
+    try {
+      setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
+      setIsBotTyping(true);
+      setError('');
+      reset({ prompt: '' });
+      const response = await axios.post<ChatResponse>('/api/chat', {
+        prompt,
+        conversationId: conversationId.current,
+      });
+      const { data } = response;
+      // console.log(response);
+      setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
+    } catch (error) {
+      console.log(error);
+      setError(
+        'Internal server error. Please refresh or contact the support team.'
+      );
+    } finally {
+      setIsBotTyping(false);
+    }
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
@@ -88,6 +98,7 @@ const ChatBot = () => {
             <div className="w-2 h-2 rounded-full bg-gray-800 animate-pulse [animation-delay:0.4s]"></div>
           </div>
         )}
+        {error && <div className="text-red-500">{error}</div>}
       </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
