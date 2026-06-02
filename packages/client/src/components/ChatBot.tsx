@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ClipboardEvent,
+} from 'react';
 import { Button } from './ui/button';
 import { FaArrowUp } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
@@ -29,6 +35,14 @@ const ChatBot = () => {
     formRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const onCopyMessage = (e: ClipboardEvent<HTMLDivElement>) => {
+    const selection = window.getSelection()?.toString().trim();
+    if (selection) {
+      e.preventDefault();
+      e.clipboardData.setData('text/plain', selection);
+    }
+  };
+
   const onSubmit = async ({ prompt }: FormData) => {
     setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
     setIsBotTyping(true);
@@ -56,6 +70,7 @@ const ChatBot = () => {
         {messages.map((message, index) => (
           <div
             key={index}
+            onCopy={onCopyMessage}
             className={`px-3 py-1 rounded-xl ${
               message.role === 'user'
                 ? 'bg-blue-600 text-white self-end'
