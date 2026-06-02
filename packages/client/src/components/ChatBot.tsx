@@ -29,10 +29,10 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const { register, handleSubmit, reset, formState } = useForm<FormData>();
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const lastMessageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+    lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const onCopyMessage = (e: ClipboardEvent<HTMLDivElement>) => {
@@ -46,7 +46,7 @@ const ChatBot = () => {
   const onSubmit = async ({ prompt }: FormData) => {
     setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
     setIsBotTyping(true);
-    reset();
+    reset({ prompt: '' });
     const response = await axios.post<ChatResponse>('/api/chat', {
       prompt,
       conversationId: conversationId.current,
@@ -65,12 +65,13 @@ const ChatBot = () => {
   };
 
   return (
-    <div>
-      <div className="flex flex-col gap-3 mb-5">
+    <div className="flex flex-col h-full">
+      <div className="flex flex-col flex-1 gap-3 mb-5 overflow-y-auto">
         {messages.map((message, index) => (
           <div
             key={index}
             onCopy={onCopyMessage}
+            ref={index === messages.length - 1 ? lastMessageRef : null}
             className={`px-3 py-1 rounded-xl ${
               message.role === 'user'
                 ? 'bg-blue-600 text-white self-end'
@@ -91,7 +92,6 @@ const ChatBot = () => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         onKeyDown={onKeyDown}
-        ref={formRef}
         className="flex flex-col px-3 py-3 gap-2 items-end border-2 div-4 rounded-3xl"
       >
         <textarea
@@ -99,6 +99,7 @@ const ChatBot = () => {
             required: true,
             validate: (data) => data.trim().length > 0,
           })}
+          autoFocus
           className="w-full border-0 focus:outline-0 resize-none"
           placeholder="Ask anything"
           maxLength={1000}
