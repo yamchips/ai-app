@@ -1,0 +1,3 @@
+Summarize the product's feature based on following customer reviews, both positive and negative:
+      
+{{reviews}}
