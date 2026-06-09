@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { HiSparkles } from 'react-icons/hi2';
 import StarRating from './StarRating';
-import Skeleton from 'react-loading-skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '../ui/button';
 import { useState } from 'react';
+import ReviewSkeleton from './ReviewSkeleton';
 
 type Props = {
   productId: number;
@@ -29,12 +29,17 @@ type GetSummaryResponse = {
 
 const ReviewList = ({ productId }: Props) => {
   const [summary, setSummary] = useState('');
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const handleSummarize = async () => {
+    setIsSummaryLoading(true);
+
     const { data } = await axios.post<GetSummaryResponse>(
       `/api/products/${productId}/reviews/summarize`
     );
+
     setSummary(data.summary);
+    setIsSummaryLoading(false);
   };
 
   const {
@@ -66,11 +71,7 @@ const ReviewList = ({ productId }: Props) => {
     return (
       <div className="flex flex-col gap-5">
         {[1, 2, 3].map((i) => (
-          <div key={i}>
-            <Skeleton width={150} />
-            <Skeleton width={100} />
-            <Skeleton count={2} />
-          </div>
+          <ReviewSkeleton key={i} />
         ))}
       </div>
     );
@@ -88,10 +89,21 @@ const ReviewList = ({ productId }: Props) => {
         {currentSummary ? (
           <p>{currentSummary}</p>
         ) : (
-          <Button onClick={handleSummarize}>
-            <HiSparkles />
-            Summarize
-          </Button>
+          <div>
+            <Button
+              onClick={handleSummarize}
+              disabled={isSummaryLoading}
+              className="cursor-pointer"
+            >
+              <HiSparkles />
+              Summarize
+            </Button>
+            {isSummaryLoading && (
+              <div className="py-3">
+                <ReviewSkeleton />
+              </div>
+            )}
+          </div>
         )}
       </div>
       <div className="flex flex-col gap-5">
