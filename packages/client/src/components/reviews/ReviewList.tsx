@@ -4,6 +4,7 @@ import StarRating from './StarRating';
 import Skeleton from 'react-loading-skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '../ui/button';
+import { useState } from 'react';
 
 type Props = {
   productId: number;
@@ -22,7 +23,20 @@ type GetReviewsResponse = {
   reviews: Review[];
 };
 
+type GetSummaryResponse = {
+  summary: string;
+};
+
 const ReviewList = ({ productId }: Props) => {
+  const [summary, setSummary] = useState('');
+
+  const handleSummarize = async () => {
+    const { data } = await axios.post<GetSummaryResponse>(
+      `/api/products/${productId}/reviews/summarize`
+    );
+    setSummary(data.summary);
+  };
+
   const {
     data: reviewData,
     error,
@@ -66,13 +80,15 @@ const ReviewList = ({ productId }: Props) => {
     return null;
   }
 
+  const currentSummary = reviewData?.summary || summary;
+
   return (
     <div>
       <div className="mb-5">
-        {reviewData?.summary ? (
-          <p>{reviewData.summary}</p>
+        {currentSummary ? (
+          <p>{currentSummary}</p>
         ) : (
-          <Button>
+          <Button onClick={handleSummarize}>
             <HiSparkles />
             Summarize
           </Button>
