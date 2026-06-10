@@ -27,18 +27,25 @@ type GetSummaryResponse = {
 };
 
 const ReviewList = ({ productId }: Props) => {
+  const summarizeReviews = async () => {
+    const { data } = await axios.post<GetSummaryResponse>(
+      `/api/products/${productId}/reviews/summarize`
+    );
+    return data;
+  };
+
   const {
     mutate: handleSummarize,
     isPending: isSummaryLoading,
     isError: isSummaryError,
     data: summarizeResponse,
   } = useMutation<GetSummaryResponse>({
-    mutationFn: () => summarizeReviews(),
+    mutationFn: summarizeReviews,
   });
 
-  const summarizeReviews = async () => {
-    const { data } = await axios.post<GetSummaryResponse>(
-      `/api/products/${productId}/reviews/summarize`
+  const fetchReviews = async () => {
+    const { data } = await axios.get<GetReviewsResponse>(
+      `/api/products/${productId}/reviews`
     );
     return data;
   };
@@ -49,16 +56,9 @@ const ReviewList = ({ productId }: Props) => {
     isLoading,
   } = useQuery<GetReviewsResponse>({
     queryKey: ['reviews', productId],
-    queryFn: () => fetchReviews(),
+    queryFn: fetchReviews,
     staleTime: 1000 * 60 * 60 * 24,
   });
-
-  const fetchReviews = async () => {
-    const { data } = await axios.get<GetReviewsResponse>(
-      `/api/products/${productId}/reviews`
-    );
-    return data;
-  };
 
   if (error) {
     return (
